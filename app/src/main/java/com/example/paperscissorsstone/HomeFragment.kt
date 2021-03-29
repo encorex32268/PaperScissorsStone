@@ -2,19 +2,21 @@ package com.example.paperscissorsstone
 
 import android.os.Bundle
 import android.view.*
+import androidx.appcompat.widget.SearchView
 
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.paperscissorsstone.databinding.FragmentHomeBinding
+import com.example.paperscissorsstone.model.PlayRoom
 
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var binding:FragmentHomeBinding
-
+    private lateinit var viewModel: HomeFragmentViewModel
+    private lateinit var mAdapter : HomeFragmentAdapter
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -31,6 +33,37 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 val name = it.getString("username","unkown")
                 homeUserName.text = name
             }
+            homeRecyclerView.apply {
+                setHasFixedSize(true)
+                layoutManager = LinearLayoutManager(requireContext())
+                mAdapter = HomeFragmentAdapter(arrayListOf())
+                adapter = mAdapter
+            }
+            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(HomeFragmentViewModel::class.java)
+            viewModel.getAllPlayRooms().observe(requireActivity(), Observer<List<PlayRoom>> {playRooms ->
+                mAdapter.apply {
+                    this.playRooms = playRooms
+                    notifyDataSetChanged()
+                }
+        })
+
+            homeSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+                android.widget.SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    return true
+                }
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    newText?.let {
+                     viewModel.queryPlayRooms(it)
+                    }
+                    return false
+                }
+
+            })
+
+
+
 
         }
 
