@@ -3,10 +3,14 @@ package com.example.paperscissorsstone.view
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.paperscissorsstone.IHomeItemListener
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.model.PlayRoom
 
 class HomeFragmentAdapter(var playRooms : List<PlayRoom>)  : RecyclerView.Adapter<HomeFragmentViewHolder>(){
+
+    var iHomeItemListener:IHomeItemListener?=null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeFragmentViewHolder {
         return HomeFragmentViewHolder(
             LayoutInflater.from(parent.context)
@@ -24,6 +28,9 @@ class HomeFragmentAdapter(var playRooms : List<PlayRoom>)  : RecyclerView.Adapte
         val playRoom = playRooms[position]
         holder.itemView.tag = position
         holder.bindTo(playRoom)
+        holder.itemView.setOnClickListener {
+            iHomeItemListener?.onItemClick(playRoom)
+        }
     }
 
 }

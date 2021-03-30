@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
-import com.example.paperscissorsstone.LoginFragmentDirections
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentLoginBinding
 
@@ -29,11 +28,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         binding.apply {
 
             loginButton.setOnClickListener {
-
                 val name = loginNameEditText.text.toString()
-
-                val action =
-                    LoginFragmentDirections.actionLoginFragmentToHomeFragment()
+                val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
                 action.username = name
                 view.findNavController().navigate(action)
             }

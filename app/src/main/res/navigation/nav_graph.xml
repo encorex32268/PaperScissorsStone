@@ -28,5 +28,17 @@
             android:name="username"
             android:defaultValue="Unkown"
             app:argType="string" />
+        <action
+            android:id="@+id/action_homeFragment_to_playFragment"
+            app:destination="@id/playFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playFragment"
+        android:name="com.example.paperscissorsstone.fragment.PlayFragment"
+        android:label="fragment_play"
+        tools:layout="@layout/fragment_play" >
+        <argument
+            android:name="playRoom"
+            app:argType="com.example.paperscissorsstone.model.PlayRoom" />
     </fragment>
 </navigation>
