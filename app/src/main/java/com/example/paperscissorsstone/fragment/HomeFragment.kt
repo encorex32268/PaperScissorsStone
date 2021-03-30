@@ -1,4 +1,4 @@
-package com.example.paperscissorsstone
+package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
 import android.view.*
@@ -7,10 +7,12 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentHomeBinding
 import com.example.paperscissorsstone.model.PlayRoom
+import com.example.paperscissorsstone.view.HomeFragmentAdapter
+import com.example.paperscissorsstone.viewmodel.HomeFragmentViewModel
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
@@ -36,10 +38,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             homeRecyclerView.apply {
                 setHasFixedSize(true)
                 layoutManager = LinearLayoutManager(requireContext())
-                mAdapter = HomeFragmentAdapter(arrayListOf())
+                mAdapter =
+                    HomeFragmentAdapter(
+                        arrayListOf()
+                    )
                 adapter = mAdapter
             }
-            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(HomeFragmentViewModel::class.java)
+            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(
+                HomeFragmentViewModel::class.java)
             viewModel.getAllPlayRooms().observe(requireActivity(), Observer<List<PlayRoom>> {playRooms ->
                 mAdapter.apply {
                     this.playRooms = playRooms

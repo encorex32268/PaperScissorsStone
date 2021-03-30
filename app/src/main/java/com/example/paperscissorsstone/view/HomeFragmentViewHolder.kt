@@ -1,4 +1,4 @@
-package com.example.paperscissorsstone
+package com.example.paperscissorsstone.view
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView

@@ -1,4 +1,4 @@
-package com.example.paperscissorsstone
+package com.example.paperscissorsstone.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
