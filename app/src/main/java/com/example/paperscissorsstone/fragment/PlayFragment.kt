@@ -25,7 +25,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         binding.apply {
             arguments?.let {
                 val playRoom = it.getParcelable<PlayRoom>("playRoom")
-                playnameTextView.text  = playRoom!!.name
+                playnameTextView.text  = playRoom!!.creator
 
             }
         }

@@ -10,7 +10,7 @@ class HomeFragmentViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView
 
     fun bindTo(playRoom: PlayRoom){
         binding.apply {
-            itemRoomname.text = playRoom.name
+            itemRoomname.text = playRoom.creator
         }
     }
 

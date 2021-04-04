@@ -22,7 +22,7 @@ class HomeFragmentViewModel : ViewModel(){
     private fun dump(): ArrayList<PlayRoom> {
         val dumpData = arrayListOf<PlayRoom>()
         for (i in 1..30) {
-            dumpData.add(PlayRoom("Room $i",i))
+            dumpData.add(PlayRoom("Andy $i","",i))
         }
         return dumpData
     }
@@ -30,7 +30,7 @@ class HomeFragmentViewModel : ViewModel(){
      fun queryPlayRooms(word : String) {
         val queried = arrayListOf<PlayRoom>()
          dump().forEach {
-            val name = it.name
+            val name = it.creator
             if (name.contains(word)){
                 queried.add(it)
             }
