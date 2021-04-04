@@ -15,7 +15,7 @@ import android.os.Parcelable
 data class PlayRoom(
     val creator : String,
     var joiner : String?,
-    val id : Int
+    val id : Long
 ) : Parcelable {
 
     constructor():this("","",1)
@@ -23,14 +23,14 @@ data class PlayRoom(
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readString(),
-        parcel.readInt()
+        parcel.readLong()
     ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(creator)
         parcel.writeString(joiner)
-        parcel.writeInt(id)
+        parcel.writeLong(id)
     }
 
     override fun describeContents(): Int {

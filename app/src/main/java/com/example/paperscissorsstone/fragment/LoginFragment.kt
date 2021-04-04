@@ -47,7 +47,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
             val database = FirebaseDatabase.getInstance()
             val myRef = database.getReference("PlayRooms")
-//            myRef.setValue(dumpData())
+            myRef.setValue(dumpData())
 
             //Read
 //            myRef.addValueEventListener(object : ValueEventListener{
@@ -74,11 +74,11 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private fun dumpData(): ArrayList<PlayRoom> {
        return arrayListOf<PlayRoom>(
-            PlayRoom("Andy","Lee",1),
-            PlayRoom("Eric","Jack",200),
-            PlayRoom("Bob","Carter",300),
-            PlayRoom("David","Frank",400),
-            PlayRoom("Go","Harry",500)
+            PlayRoom("Andy","Lee",33941),
+            PlayRoom("Eric","Jack",99182),
+            PlayRoom("Bob","Carter",51230),
+            PlayRoom("David","Frank",762243),
+            PlayRoom("Go","Harry",2231123768)
         )
 
     }
