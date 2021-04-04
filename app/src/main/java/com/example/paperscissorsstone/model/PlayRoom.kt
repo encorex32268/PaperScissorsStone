@@ -17,6 +17,7 @@ data class PlayRoom(
     var joiner : String?,
     val id : Int
 ) : Parcelable {
+
     constructor():this("","",1)
 
     constructor(parcel: Parcel) : this(
@@ -34,6 +35,10 @@ data class PlayRoom(
 
     override fun describeContents(): Int {
         return 0
+    }
+
+    override fun toString(): String {
+        return "PlayRoom(creator='$creator', joiner=$joiner, id=$id)"
     }
 
     companion object CREATOR : Parcelable.Creator<PlayRoom> {

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "668806955358",
+    "project_id": "paperscissorsstone-aba71",
+    "storage_bucket": "paperscissorsstone-aba71.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:668806955358:android:1664e623e36bac30168fcf",
+        "android_client_info": {
+          "package_name": "com.example.paperscissorsstone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "668806955358-i9vua066vo671e0kucn9qseaa9g6fecn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYmqL88k7-hFwqYMigsklmgrMumSZdSfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "668806955358-i9vua066vo671e0kucn9qseaa9g6fecn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
