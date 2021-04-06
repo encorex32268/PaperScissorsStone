@@ -6,9 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.paperscissorsstone.CardTypes
-import com.example.paperscissorsstone.IPlayItemListener
-import com.example.paperscissorsstone.R
+import com.example.paperscissorsstone.*
 import com.example.paperscissorsstone.databinding.FragmentPlayBinding
 import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.view.PlayFragmentAdapter
@@ -19,7 +17,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
     private lateinit var binding : FragmentPlayBinding
     private lateinit var mAdapter : PlayFragmentAdapter
-
+    private lateinit var nowCardTypes: CardTypes
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -34,9 +32,8 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
             arguments?.let { it ->
                 val playRoom = it.getParcelable<PlayRoom>("playRoom")
                 playRoom?.let{
-                    playnameTextView.text = it.creator
-                    hostPlayNameTextView.text = it.creator
-                    joinerPlayNameTextView.text = it.joiner
+                    hostPlayNameTextView.text = getStringSharedPreferences(Constants.USER_NAME)
+                    joinerPlayNameTextView.text = it.creator
                     hostPointsTextView.text = "0"
                     joinerPointsTextView.text = "0"
                     hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
@@ -47,12 +44,14 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                 ))
                 mAdapter.iPlayItemListener = object : IPlayItemListener{
                     override fun onItemClick(cardTypes: CardTypes) {
+                        nowCardTypes = cardTypes
                         when(cardTypes){
                             CardTypes.PAPER ->hostPlayCardImageView.setImageResource(R.drawable.icon_play_papper)
                             CardTypes.SCISSORS->hostPlayCardImageView.setImageResource(R.drawable.icon_play_scissors)
                             CardTypes.STONE->hostPlayCardImageView.setImageResource(R.drawable.icon_play_stone)
                             CardTypes.UNKOWN -> hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
                         }
+
                     }
 
                 }
@@ -60,6 +59,11 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                     setHasFixedSize(true)
                     layoutManager = GridLayoutManager(requireContext(),3)
                     adapter = mAdapter
+                }
+
+                okButton.setOnClickListener {
+                    mAdapter.cards.remove(nowCardTypes)
+                    mAdapter.notifyDataSetChanged()
                 }
             }
         }

@@ -15,7 +15,7 @@ import android.os.Parcelable
 data class PlayRoom(
     val creator : String,
     var joiner : String?,
-    val id : Long
+    var id : Long
 ) : Parcelable {
 
     constructor():this("","",1)
