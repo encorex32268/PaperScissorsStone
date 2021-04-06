@@ -2,6 +2,8 @@ package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
 import android.view.*
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AlertDialogLayout
 import androidx.appcompat.widget.SearchView
 
 import androidx.fragment.app.Fragment
@@ -15,6 +17,7 @@ import com.example.paperscissorsstone.databinding.FragmentHomeBinding
 import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.view.HomeFragmentAdapter
 import com.example.paperscissorsstone.viewmodel.HomeFragmentViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
 
@@ -84,8 +87,18 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
     }
 
     override fun onItemClick(playRoom: PlayRoom) {
-         val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
-         view?.findNavController()?.navigate(action)
+        if(!playRoom.joiner.isNullOrEmpty()){
+            val builder = AlertDialog.Builder(requireContext())
+            builder.apply {
+                setTitle("Warring")
+                setMessage("Can't go to this room is full")
+                setPositiveButton("ok",null)
+            }.show()
+        }else{
+            val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
+            view?.findNavController()?.navigate(action)
+        }
+
 //        action.username = name
 //        view.findNavController().navigate(action)
 //

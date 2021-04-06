@@ -1,5 +1,7 @@
 package com.example.paperscissorsstone.fragment
 
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,13 +10,18 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
+import com.example.paperscissorsstone.Constants
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentLoginBinding
+import com.example.paperscissorsstone.getStringSharedPreferences
 import com.example.paperscissorsstone.model.PlayRoom
+import com.example.paperscissorsstone.setStringSharedPreferences
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.util.*
+import kotlin.collections.ArrayList
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
@@ -33,9 +40,17 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.apply {
-
+            loginNameEditText.setText(getStringSharedPreferences(Constants.USER_NAME))
             loginButton.setOnClickListener {
+                if (getStringSharedPreferences(Constants.USER_UUID).isNullOrEmpty()){
+                    val uuid = UUID.randomUUID().toString()
+                    setStringSharedPreferences(Constants.USER_UUID,uuid)
+                    Log.d(TAG, "onViewCreated: get new uuid $uuid")
+                }else{
+                    Log.d(TAG, "onViewCreated: Already have ")
+                }
                 val name = loginNameEditText.text.toString()
+                setStringSharedPreferences(Constants.USER_NAME,name)
                 val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
                 action.username = name
                 view.findNavController().navigate(action)
@@ -48,35 +63,15 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             val database = FirebaseDatabase.getInstance()
             val myRef = database.getReference("PlayRooms")
             myRef.setValue(dumpData())
-
-            //Read
-//            myRef.addValueEventListener(object : ValueEventListener{
-//                override fun onCancelled(error: DatabaseError) {
-//                    Toast.makeText(requireContext(),"Error ${error.message}",Toast.LENGTH_SHORT).show()
-//                }
-//
-//                override fun onDataChange(snapshot: DataSnapshot) {
-//                    Log.d(TAG, "onDataChange: ${snapshot.childrenCount}")
-//                    snapshot.children.forEach {
-//                        val playRoom = it.getValue(PlayRoom::class.java)
-//                        Log.d(TAG, "onDataChange: $playRoom")
-//                    }
-//
-//                }
-//
-//            })
-
-
-
         }
 
     }
 
     private fun dumpData(): ArrayList<PlayRoom> {
        return arrayListOf<PlayRoom>(
-            PlayRoom("Andy","Lee",33941),
-            PlayRoom("Eric","Jack",99182),
-            PlayRoom("Bob","Carter",51230),
+            PlayRoom("Andy Empty","",33941),
+            PlayRoom("Eric Empty","",99182),
+            PlayRoom("Bob","Cater",51230),
             PlayRoom("David","Frank",762243),
             PlayRoom("Go","Harry",2231123768)
         )
