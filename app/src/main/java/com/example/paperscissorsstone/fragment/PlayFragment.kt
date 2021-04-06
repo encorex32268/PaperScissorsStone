@@ -5,13 +5,21 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.GridLayoutManager
+import com.example.paperscissorsstone.CardTypes
+import com.example.paperscissorsstone.IPlayItemListener
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentPlayBinding
 import com.example.paperscissorsstone.model.PlayRoom
+import com.example.paperscissorsstone.view.PlayFragmentAdapter
+
+//https://www.vecteezy.com/vector-art/691497-rock-paper-scissors-neon-icons
 
 class PlayFragment : Fragment(R.layout.fragment_play) {
 
     private lateinit var binding : FragmentPlayBinding
+    private lateinit var mAdapter : PlayFragmentAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -23,12 +31,40 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.apply {
-            arguments?.let {
+            arguments?.let { it ->
                 val playRoom = it.getParcelable<PlayRoom>("playRoom")
-                playnameTextView.text  = playRoom!!.creator
+                playRoom?.let{
+                    playnameTextView.text = it.creator
+                    hostPlayNameTextView.text = it.creator
+                    joinerPlayNameTextView.text = it.joiner
+                    hostPointsTextView.text = "0"
+                    joinerPointsTextView.text = "0"
+                    hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
+                    joinerPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
+                }
+                mAdapter = PlayFragmentAdapter(arrayListOf(
+                    CardTypes.STONE,CardTypes.STONE,CardTypes.SCISSORS,CardTypes.PAPER,CardTypes.PAPER
+                ))
+                mAdapter.iPlayItemListener = object : IPlayItemListener{
+                    override fun onItemClick(cardTypes: CardTypes) {
+                        when(cardTypes){
+                            CardTypes.PAPER ->hostPlayCardImageView.setImageResource(R.drawable.icon_play_papper)
+                            CardTypes.SCISSORS->hostPlayCardImageView.setImageResource(R.drawable.icon_play_scissors)
+                            CardTypes.STONE->hostPlayCardImageView.setImageResource(R.drawable.icon_play_stone)
+                            CardTypes.UNKOWN -> hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
+                        }
+                    }
 
+                }
+                playRecyclerView.apply {
+                    setHasFixedSize(true)
+                    layoutManager = GridLayoutManager(requireContext(),3)
+                    adapter = mAdapter
+                }
             }
         }
     }
+
+
 
 }
