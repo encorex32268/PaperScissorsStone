@@ -13,7 +13,12 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.paperscissorsstone.CardTypes
+import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
 import com.example.paperscissorsstone.Constants.USER_NAME
+import com.example.paperscissorsstone.Constants.USER_UUID
 import com.example.paperscissorsstone.IHomeItemListener
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentHomeBinding
@@ -22,14 +27,16 @@ import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.view.HomeFragmentAdapter
 import com.example.paperscissorsstone.viewmodel.HomeFragmentViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import java.util.concurrent.ThreadLocalRandom
 
 class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
-
+    private val TAG = HomeFragment::class.java.simpleName
     private lateinit var binding:FragmentHomeBinding
     private lateinit var viewModel: HomeFragmentViewModel
     private lateinit var mAdapter : HomeFragmentAdapter
+    private val mRef = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,10 +56,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
             homeRecyclerView.apply {
                 setHasFixedSize(true)
                 layoutManager = LinearLayoutManager(requireContext())
-                mAdapter =
-                    HomeFragmentAdapter(
-                        arrayListOf()
-                    )
+                mAdapter = HomeFragmentAdapter(arrayListOf())
                 mAdapter.iHomeItemListener = this@HomeFragment
                 adapter = mAdapter
             }
@@ -80,36 +84,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
 
             })
 
-
             homeAddfloatingActionButton.setOnClickListener {
-                val playRoom = PlayRoom(
-                    id = 0,
-                    creator = getStringSharedPreferences(USER_NAME)!!,
-                    joiner = ""
-                )
-                //upload to Firebase
-                val database = FirebaseDatabase.getInstance()
-                var myRef = database.getReference("PlayRooms")
-                val firebaseID = myRef.push().key
-                var resultString = ""
-                for (string in firebaseID.toString()) {
-                    val temp : Int = string.toInt()
-                    resultString+=temp
-                }
-                playRoom.id = resultString.substring(0,8).toLong()
-                myRef.database.getReference("PlayRooms").child(playRoom.id.toString())
-                    .setValue(playRoom)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful){
-                            val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
-                            view.findNavController().navigate(action)
-                        }
-                        else{
-                            Toast.makeText(requireContext(),it.exception?.message,Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
-
+                addPlayRoomToFirebase(view)
 
             }
 
@@ -119,6 +95,52 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
 
         }
 
+    }
+
+    private fun addPlayRoomToFirebase(
+        view: View
+    ) {
+        val playRoom = createPlayRoom()
+        mRef.child(playRoom.id.toString())
+            .setValue(playRoom)
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
+                    view.findNavController().navigate(action)
+                } else {
+                    Toast.makeText(requireContext(), it.exception?.message, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        mRef.child(playRoom.id.toString())
+            .child("status")
+            .setValue(PLAYROOM_STATUS_WAIT)
+    }
+
+
+
+    private fun createPlayRoom(): PlayRoom {
+        return PlayRoom(
+            id = generatePlayRoomID(),
+            creator = getStringSharedPreferences(USER_NAME)!!,
+            joiner = "",
+            creatorID = getStringSharedPreferences(USER_UUID)!!,
+            creatorCard = CardTypes.UNKOWN.ordinal,
+            joinerCard = CardTypes.UNKOWN.ordinal,
+            creatorPoint = 0,
+            joinerPoint = 0
+        )
+    }
+    private fun generatePlayRoomID(): Long{
+        var resultString = ""
+        val creatorID = getStringSharedPreferences(USER_UUID)
+        if (creatorID != null) {
+            for (string in creatorID) {
+                val temp: Int = string.toInt()
+                resultString += temp
+            }
+        }
+        return resultString.substring(0, 8).toLong()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -135,14 +157,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 setPositiveButton("ok",null)
             }.show()
         }else{
-            //TODO to change CreatorFragment
+            mRef.child(playRoom.id.toString())
+                .child("status")
+                .setValue(PLAYROOM_STATUS_START)
             val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
             view?.findNavController()?.navigate(action)
         }
-
-//        action.username = name
-//        view.findNavController().navigate(action)
-//
     }
 
 
