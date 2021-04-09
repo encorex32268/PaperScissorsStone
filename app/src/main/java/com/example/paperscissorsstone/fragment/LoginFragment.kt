@@ -1,7 +1,6 @@
 package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,11 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import com.example.paperscissorsstone.*
 import com.example.paperscissorsstone.databinding.FragmentLoginBinding
-import com.example.paperscissorsstone.model.PlayRoom
+import com.example.paperscissorsstone.model.User
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.ktx.Firebase
 import java.util.*
-import java.util.concurrent.ThreadLocalRandom
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
@@ -40,7 +37,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 if (uuid.isNullOrEmpty()){
                     uuid = UUID.randomUUID().toString()
                     setStringSharedPreferences(Constants.USER_UUID,uuid)
-                    val user = User(uuid,name)
+                    val user =
+                        User(uuid, name)
                     addUserDataToFirebase(user)
                 }
                 val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
@@ -55,7 +53,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     }
 
-    private fun addUserDataToFirebase(user:User) {
+    private fun addUserDataToFirebase(user: User) {
         FirebaseDatabase.getInstance().getReference("Users")
             .child(user.uuid)
             .setValue(user)

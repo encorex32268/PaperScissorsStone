@@ -13,46 +13,37 @@ import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_SHOW
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
 import com.example.paperscissorsstone.model.PlayRoom
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 
 class PlayFragmentViewModel(application: Application)  : AndroidViewModel(application){
 
     var playRoom = MutableLiveData<PlayRoom>()
     var status = MutableLiveData<Int>()
+    private var mRef : DatabaseReference = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
+
     fun getPlayRoomInfo(roomIDString : String){
-        FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS).child(roomIDString)
+        mRef.child(roomIDString)
             .addValueEventListener(object : ValueEventListener{
                 override fun onCancelled(error: DatabaseError) {
                 }
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val playroom = snapshot.getValue(PlayRoom::class.java)
-                    playroom?.let {
-                        playRoom.postValue(it)
+                    if (playroom == null){
+                        playRoom.postValue(PlayRoom())
+                    }else{
+                        playRoom.postValue(playroom!!)
                     }
                 }
 
             })
-        FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS).child(roomIDString)
+        mRef.child(roomIDString)
             .child("status")
             .addValueEventListener(object : ValueEventListener{
                 override fun onCancelled(error: DatabaseError) {}
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    Log.d("PlayFragmentViewModel", "onDataChange: ${snapshot.value}")
-                    val mStatus = when(snapshot.value){
-                        PLAYROOM_STATUS_WAIT ->0
-                        PLAYROOM_STATUS_START ->1
-                        PLAYROOM_STATUS_SHOW ->2
-                        PLAYROOM_STATUS_CREATOR_WIN->3
-                        PLAYROOM_STATUS_JOINER_WIN ->4
-                        PLAYROOM_STATUS_CREATOR_OK->5
-                        PLAYROOM_STATUS_JOINER_OK->6
-                        else ->99
-                    }
-                    Log.d("PlayFragmentViewModel", "onDataChange: $mStatus ")
-                    status.postValue(mStatus)
+                    if (snapshot.value == null) return
+                    val resultStatus = snapshot.getValue(Int::class.java)
+                    status.postValue(resultStatus!!)
 
                 }
 
@@ -60,8 +51,7 @@ class PlayFragmentViewModel(application: Application)  : AndroidViewModel(applic
     }
 
     fun updatePlayRoom(playRoom: PlayRoom){
-        FirebaseDatabase.getInstance().getReference("PlayRooms").child(playRoom.id.toString())
-            .setValue(playRoom)
+        mRef.child(playRoom.id.toString()).setValue(playRoom)
     }
 
 

@@ -1,6 +1,7 @@
 package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -10,9 +11,12 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.paperscissorsstone.*
+import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_OK
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_WIN
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINER_OK
@@ -40,6 +44,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     private var ISCreator = false
     private lateinit var actionBar: ActionBar
     private var playRoom: PlayRoom? = null
+    private val mRefPlayRoom = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -58,8 +63,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
             actionBar.setDisplayHomeAsUpEnabled(true)
 
             arguments?.let { it ->
-
-                playRoom = it.getParcelable<PlayRoom>("playRoom")
+                playRoom = it.getParcelable("playRoom")
                 playRoom?.let{
                     if (getStringSharedPreferences(USER_UUID).equals(it.creatorID)){
                         joinerPlayNameTextView.text = "Wait for Joiner"
@@ -71,13 +75,20 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                         ISCreator = false
                     }
                     viewModel.getPlayRoomInfo(it.id.toString())
-                    viewModel.playRoom.observe(requireActivity(), Observer { playRoom->
-                        hostPlayNameTextView.text = playRoom.creator
-                        joinerPlayNameTextView.text = playRoom.joiner?:"Wait..."
-                        hostPointsTextView.text = playRoom.creatorPoint.toString()
-                        joinerPointsTextView.text = playRoom.joinerPoint.toString()
-                        hostPlayCardImageView.setImageResource(getCardResources(playRoom.creatorCard))
-                        joinerPlayCardImageView.setImageResource(getCardResources(playRoom.joinerCard))
+                    viewModel.playRoom.observe(requireActivity(), Observer { vmPlayRoom->
+                        if (vmPlayRoom.creator.isBlank()){
+                            // if creator is leave
+                            playRoom = vmPlayRoom
+                            view.findNavController().popBackStack()
+                        }else{
+                            hostPlayNameTextView.text = vmPlayRoom.creator
+                            joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
+                            hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
+                            joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
+                            hostPlayCardImageView.setImageResource(getCardResources(vmPlayRoom.creatorCard))
+                            joinerPlayCardImageView.setImageResource(getCardResources(vmPlayRoom.joinerCard))
+                        }
+
 
                     })
                     viewModel.status.observe(requireActivity(), Observer { status ->
@@ -181,9 +192,11 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
     private fun removePlayRoom() {
         if (ISCreator) {
-            FirebaseDatabase.getInstance().getReference("PlayRooms")
-                .child(playRoom?.id.toString())
-                .removeValue()
+            mRefPlayRoom.child(playRoom?.id.toString()).removeValue()
+        }else{
+            if (!playRoom?.creator.isNullOrBlank()){
+                mRefPlayRoom.child(playRoom?.id.toString()).child("joiner").setValue("")
+            }
         }
     }
 

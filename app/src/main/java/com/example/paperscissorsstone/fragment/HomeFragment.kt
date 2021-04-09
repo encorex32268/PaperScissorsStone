@@ -74,7 +74,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     return true
                 }
-
                 override fun onQueryTextChange(newText: String?): Boolean {
                     newText?.let {
                      viewModel.queryPlayRooms(it)
@@ -83,18 +82,10 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 }
 
             })
-
             homeAddfloatingActionButton.setOnClickListener {
                 addPlayRoomToFirebase(view)
-
             }
-
-
-
-
-
         }
-
     }
 
     private fun addPlayRoomToFirebase(
@@ -157,9 +148,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 setPositiveButton("ok",null)
             }.show()
         }else{
-            mRef.child(playRoom.id.toString())
-                .child("status")
-                .setValue(PLAYROOM_STATUS_START)
+            if (playRoom.creatorID != getStringSharedPreferences(USER_UUID)){
+                mRef.child(playRoom.id.toString())
+                    .child("status")
+                    .setValue(PLAYROOM_STATUS_START)
+            }
+
             val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
             view?.findNavController()?.navigate(action)
         }

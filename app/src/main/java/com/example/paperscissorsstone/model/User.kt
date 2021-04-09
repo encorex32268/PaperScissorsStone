@@ -1,4 +1,4 @@
-package com.example.paperscissorsstone
+package com.example.paperscissorsstone.model
 
 data class User(
     val uuid : String,

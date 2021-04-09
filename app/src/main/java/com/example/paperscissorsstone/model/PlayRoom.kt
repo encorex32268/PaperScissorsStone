@@ -40,7 +40,7 @@ data class PlayRoom(
     ) {
     }
 
-    constructor():this("","Wait For Joiner ",0,"",CardTypes.UNKOWN.ordinal,CardTypes.UNKOWN.ordinal,0,0)
+    constructor():this("","",0,"",CardTypes.UNKOWN.ordinal,CardTypes.UNKOWN.ordinal,0,0)
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(creator)
