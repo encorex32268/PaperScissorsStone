@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import com.example.paperscissorsstone.*
@@ -16,18 +18,23 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private lateinit var binding: FragmentLoginBinding
     private val TAG = LoginFragment::class.java.simpleName
+    private lateinit var actionBar: ActionBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        setHasOptionsMenu(false)
+
         binding = FragmentLoginBinding.inflate(inflater,container,false)
         return binding .root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        actionBar = (activity as AppCompatActivity).supportActionBar!!
+        actionBar.setDisplayHomeAsUpEnabled(false)
         binding.apply {
             loginNameEditText.setText(getStringSharedPreferences(Constants.USER_NAME))
             loginButton.setOnClickListener {

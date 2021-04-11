@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AlertDialogLayout
 import androidx.appcompat.widget.SearchView
 
@@ -37,17 +39,21 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
     private lateinit var viewModel: HomeFragmentViewModel
     private lateinit var mAdapter : HomeFragmentAdapter
     private val mRef = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
+    private lateinit var actionBar: ActionBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        setHasOptionsMenu(true)
         binding = FragmentHomeBinding.inflate(inflater,container,false)
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        actionBar = (activity as AppCompatActivity).supportActionBar!!
+        actionBar.setDisplayHomeAsUpEnabled(true)
         binding.apply {
             arguments?.let {
                 val name = it.getString("username","unkown")
@@ -157,6 +163,16 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
             val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
             view?.findNavController()?.navigate(action)
         }
+    }
+
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            android.R.id.home->{
+                view?.findNavController()?.popBackStack()
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
 

@@ -1,18 +1,16 @@
 package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.paperscissorsstone.*
@@ -29,7 +27,6 @@ import com.example.paperscissorsstone.Constants.USER_UUID
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentPlayBinding
 import com.example.paperscissorsstone.model.PlayRoom
-import com.example.paperscissorsstone.view.PlayFragmentAdapter
 import com.example.paperscissorsstone.viewmodel.PlayFragmentViewModel
 import com.google.firebase.database.*
 
@@ -38,7 +35,6 @@ import com.google.firebase.database.*
 class PlayFragment : Fragment(R.layout.fragment_play) {
     private val TAG = PlayFragment::class.java.simpleName
     private lateinit var binding : FragmentPlayBinding
-    private lateinit var mAdapter : PlayFragmentAdapter
     private lateinit var nowCardTypes: CardTypes
     private lateinit var  viewModel : PlayFragmentViewModel
     private var ISCreator = false
@@ -76,7 +72,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                     }
                     viewModel.getPlayRoomInfo(it.id.toString())
                     viewModel.playRoom.observe(requireActivity(), Observer { vmPlayRoom->
-                        if (vmPlayRoom.creator.isBlank()){
+                        if (vmPlayRoom.creator.isBlank() && !ISCreator){
                             // if creator is leave
                             playRoom = vmPlayRoom
                             view.findNavController().popBackStack()
@@ -85,8 +81,8 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                             joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
                             hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
                             joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-                            hostPlayCardImageView.setImageResource(getCardResources(vmPlayRoom.creatorCard))
-                            joinerPlayCardImageView.setImageResource(getCardResources(vmPlayRoom.joinerCard))
+                            hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
+                            joinerPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
                         }
 
 
@@ -131,44 +127,22 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
                     })
                 }
-                mAdapter = PlayFragmentAdapter(arrayListOf(
-                    CardTypes.STONE,CardTypes.STONE,CardTypes.SCISSORS,CardTypes.PAPER,CardTypes.PAPER
-                ))
-                mAdapter.iPlayItemListener = object : IPlayItemListener{
-                    override fun onItemClick(cardTypes: CardTypes) {
-//                        nowCardTypes = cardTypes
-//                        when(cardTypes){
-//                            CardTypes.PAPER ->hostPlayCardImageView.setImageResource(R.drawable.icon_play_papper)
-//                            CardTypes.SCISSORS->hostPlayCardImageView.setImageResource(R.drawable.icon_play_scissors)
-//                            CardTypes.STONE->hostPlayCardImageView.setImageResource(R.drawable.icon_play_stone)
-//                            CardTypes.UNKOWN -> hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
-//                        }
 
-                    }
-
-                }
-                playRecyclerView.apply {
-                    setHasFixedSize(true)
-                    layoutManager = GridLayoutManager(requireContext(),3)
-                    adapter = mAdapter
-                }
 
                 okButton.setOnClickListener {
-                    mAdapter.cards.remove(nowCardTypes)
-                    mAdapter.notifyDataSetChanged()
+                    //
                 }
             }
+
+            playCardPapper.setOnClickListener {hostPlayCardImageView.setImageResource(R.drawable.icon_play_papper)}
+            playCardScissors.setOnClickListener{hostPlayCardImageView.setImageResource(R.drawable.icon_play_scissors)}
+            playCardStone.setOnClickListener{hostPlayCardImageView.setImageResource(R.drawable.icon_play_stone)}
+
+
         }
     }
 
-    fun getCardResources(cardInt: Int) : Int{
-        return when(cardInt){
-            0->R.drawable.icon_play_papper
-            1->R.drawable.icon_play_scissors
-            2->R.drawable.icon_play_stone
-            else -> R.drawable.ic_play_unkown
-        }
-    }
+
 
     override fun onStart() {
         super.onStart()
@@ -201,4 +175,8 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     }
 
 
+
+
 }
+
+
