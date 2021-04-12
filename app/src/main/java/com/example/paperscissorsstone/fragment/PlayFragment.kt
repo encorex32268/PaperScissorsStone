@@ -6,13 +6,11 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
 import com.example.paperscissorsstone.*
 import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_OK
@@ -32,15 +30,16 @@ import com.google.firebase.database.*
 
 //https://www.vecteezy.com/vector-art/691497-rock-paper-scissors-neon-icons
 
-class PlayFragment : Fragment(R.layout.fragment_play) {
+class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     private val TAG = PlayFragment::class.java.simpleName
     private lateinit var binding : FragmentPlayBinding
-    private lateinit var nowCardTypes: CardTypes
     private lateinit var  viewModel : PlayFragmentViewModel
-    private var ISCreator = false
+    private var isCreator = false
     private lateinit var actionBar: ActionBar
     private var playRoom: PlayRoom? = null
     private val mRefPlayRoom = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
+    private var nowCard =0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -60,19 +59,19 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
             arguments?.let { it ->
                 playRoom = it.getParcelable("playRoom")
-                playRoom?.let{
+                playRoom?.let{ it ->
                     if (getStringSharedPreferences(USER_UUID).equals(it.creatorID)){
                         joinerPlayNameTextView.text = "Wait for Joiner"
-                        ISCreator = true
+                        isCreator = true
                     }else{
                         it.joiner = getStringSharedPreferences(USER_NAME)
                         joinerPlayNameTextView.text = it.joiner
                         viewModel.updatePlayRoom(it)
-                        ISCreator = false
+                        isCreator = false
                     }
                     viewModel.getPlayRoomInfo(it.id.toString())
                     viewModel.playRoom.observe(requireActivity(), Observer { vmPlayRoom->
-                        if (vmPlayRoom.creator.isBlank() && !ISCreator){
+                        if (vmPlayRoom.creator.isBlank() && !isCreator){
                             // if creator is leave
                             playRoom = vmPlayRoom
                             view.findNavController().popBackStack()
@@ -81,8 +80,8 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                             joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
                             hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
                             joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-                            hostPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
-                            joinerPlayCardImageView.setImageResource(R.drawable.ic_play_unkown)
+                            hostPlayCardImageView.setImageResource(vmPlayRoom.creatorCard)
+                            joinerPlayCardImageView.setImageResource(vmPlayRoom.joinerCard)
                         }
 
 
@@ -90,7 +89,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                     viewModel.status.observe(requireActivity(), Observer { status ->
                         when(status){
                             PLAYROOM_STATUS_WAIT ->{
-                                playRoomStatus.text = if (ISCreator){
+                                playRoomStatus.text = if (isCreator){
                                     "Wait For Joiner"
                                 }else{
                                     "等待對方出牌"
@@ -103,14 +102,14 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                                 playRoomStatus.text = "開牌"
                             }
                             PLAYROOM_STATUS_CREATOR_WIN->{
-                                playRoomStatus.text = if (ISCreator){
+                                playRoomStatus.text = if (isCreator){
                                     "贏"
                                 }else{
                                     "輸"
                                 }
                             }
                             PLAYROOM_STATUS_JOINER_WIN->{
-                                playRoomStatus.text = if (ISCreator){
+                                playRoomStatus.text = if (isCreator){
                                     "輸"
                                 }else{
                                     "贏"
@@ -126,17 +125,24 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                         }
 
                     })
+                    okButton.setOnClickListener {view ->
+                        //upload
+                        if (isCreator){
+                            it.creatorCard = nowCard
+                        }else{
+                            it.joinerCard = nowCard
+                        }
+                        viewModel.updatePlayRoom(it)
+                    }
                 }
 
 
-                okButton.setOnClickListener {
-                    //
-                }
+
             }
 
-            playCardPapper.setOnClickListener {hostPlayCardImageView.setImageResource(R.drawable.icon_play_papper)}
-            playCardScissors.setOnClickListener{hostPlayCardImageView.setImageResource(R.drawable.icon_play_scissors)}
-            playCardStone.setOnClickListener{hostPlayCardImageView.setImageResource(R.drawable.icon_play_stone)}
+            playCardPapper.setOnClickListener(this@PlayFragment)
+            playCardScissors.setOnClickListener(this@PlayFragment)
+            playCardStone.setOnClickListener(this@PlayFragment)
 
 
         }
@@ -165,7 +171,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     }
 
     private fun removePlayRoom() {
-        if (ISCreator) {
+        if (isCreator) {
             mRefPlayRoom.child(playRoom?.id.toString()).removeValue()
         }else{
             if (!playRoom?.creator.isNullOrBlank()){
@@ -174,7 +180,23 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         }
     }
 
-
+    override fun onClick(p0: View?) {
+        val image = if (isCreator) binding.hostPlayCardImageView else binding.joinerPlayCardImageView
+        when(p0?.id){
+            R.id.playCardPapper->{
+                image.setImageResource(R.drawable.icon_play_scissors)
+                nowCard = R.drawable.icon_play_scissors
+            }
+            R.id.playCardScissors->{
+                image.setImageResource(R.drawable.icon_play_papper)
+                nowCard = R.drawable.icon_play_papper
+            }
+            R.id.playCardStone->{
+                image.setImageResource(R.drawable.icon_play_stone)
+                nowCard = R.drawable.icon_play_stone
+            }
+        }
+    }
 
 
 }

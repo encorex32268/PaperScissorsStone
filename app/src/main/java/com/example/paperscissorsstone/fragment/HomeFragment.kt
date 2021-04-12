@@ -1,13 +1,11 @@
 package com.example.paperscissorsstone.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AlertDialogLayout
 import androidx.appcompat.widget.SearchView
 
 import androidx.fragment.app.Fragment
@@ -15,7 +13,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.paperscissorsstone.CardTypes
 import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
@@ -28,10 +25,7 @@ import com.example.paperscissorsstone.getStringSharedPreferences
 import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.view.HomeFragmentAdapter
 import com.example.paperscissorsstone.viewmodel.HomeFragmentViewModel
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import java.util.concurrent.ThreadLocalRandom
 
 class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
     private val TAG = HomeFragment::class.java.simpleName
@@ -122,8 +116,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
             creator = getStringSharedPreferences(USER_NAME)!!,
             joiner = "",
             creatorID = getStringSharedPreferences(USER_UUID)!!,
-            creatorCard = CardTypes.UNKOWN.ordinal,
-            joinerCard = CardTypes.UNKOWN.ordinal,
+            creatorCard = R.drawable.ic_play_unkown,
+            joinerCard = R.drawable.ic_play_unkown,
             creatorPoint = 0,
             joinerPoint = 0
         )

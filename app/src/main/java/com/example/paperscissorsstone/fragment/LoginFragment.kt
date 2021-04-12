@@ -60,6 +60,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     }
 
+
     private fun addUserDataToFirebase(user: User) {
         FirebaseDatabase.getInstance().getReference("Users")
             .child(user.uuid)

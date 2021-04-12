@@ -2,7 +2,7 @@ package com.example.paperscissorsstone.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.example.paperscissorsstone.CardTypes
+import com.example.paperscissorsstone.R
 
 /**
  * Data :
@@ -40,7 +40,7 @@ data class PlayRoom(
     ) {
     }
 
-    constructor():this("","",0,"",CardTypes.UNKOWN.ordinal,CardTypes.UNKOWN.ordinal,0,0)
+    constructor():this("","",0,"", R.drawable.ic_play_unkown,R.drawable.ic_play_unkown,0,0)
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(creator)
