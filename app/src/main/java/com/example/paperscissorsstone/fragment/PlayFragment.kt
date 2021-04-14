@@ -60,6 +60,7 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 init(it)
                 viewModel.getPlayRoomInfo().observe(requireActivity(), Observer { vmPlayRoom ->
                         playRoom = vmPlayRoom
+                    Log.d(TAG, "onViewCreated: ViewModel PlayRoom ${playRoom.toString()}")
                     if (vmPlayRoom.creator.isBlank() && !isCreator){
                             // if creator is leave
                             view.findNavController().popBackStack()
@@ -79,16 +80,22 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                     })
 
                     okButton.setOnClickListener {view ->
+
                         //upload
-                        var playroom = viewModel.playRoom.value!!
-                        if (isCreator){
-                            playroom.creatorCard = nowCard
-                            playroom.status = PLAYROOM_STATUS_CREATOR_OK
-                        }else{
-                            playroom.joinerCard = nowCard
-                            playroom.status = PLAYROOM_STATUS_JOINER_OK
+                        playRoom?.let {
+                            if (it.creatorCard==99 || it.joinerCard==99)return@setOnClickListener
+
+                            cardClickListener(false)
+                            if (isCreator){
+                                it.creatorCard = nowCard
+                                it.status = PLAYROOM_STATUS_CREATOR_OK
+                            }else{
+                                it.joinerCard = nowCard
+                                it.status = PLAYROOM_STATUS_JOINER_OK
+                            }
+                            viewModel.updatePlayRoom(it)
                         }
-                        viewModel.updatePlayRoom(playroom)
+
                     }
 
 
@@ -119,8 +126,8 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 isCreator = false
             }
 
-            hostPlayCardImageView.setImageResource(setCardImageByInt(it.creatorCard))
-            joinerPlayCardImageView.setImageResource(setCardImageByInt(it.joinerCard))
+            hostPlayCardImageView.setImageResource(setCardImageByInt(99))
+            joinerPlayCardImageView.setImageResource(setCardImageByInt(99))
 
             viewModel.updatePlayRoom(it)
             viewModel.listenPlayRoom(it.id.toString())
@@ -199,21 +206,17 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 cardClickListener(true)
                 "請出牌"
             }
-            PLAYROOM_STATUS_CREATOR_WIN ->{
-                if (isCreator) {
-                    playRoom?.let {
-                        it.creatorPoint++
-                        it.creatorCard = 99
-                        it.joinerCard = 99
-                        viewModel.updatePlayRoom(it)
-                    }
-                    restart()
-                    "WIN"
+            PLAYROOM_STATUS_CREATOR_WIN -> {
+                playRoom?.let {
+                    it.creatorPoint++
+                    it.creatorCard = 99
+                    it.joinerCard = 99
+                    viewModel.updatePlayRoom(it)
                 }
-                else "Loss"
+                restart()
+                if (isCreator) "WIN" else "Loss"
             }
-            PLAYROOM_STATUS_JOINNER_WIN ->{if (isCreator)"Loss"
-            else
+            PLAYROOM_STATUS_JOINNER_WIN ->{
                 playRoom?.let {
                     it.joinerPoint++
                     it.creatorCard = 99
@@ -221,12 +224,17 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                     viewModel.updatePlayRoom(it)
                 }
                 restart()
-                "WIN"
-            }
+                if (isCreator){ "Loss" } else "WIN" }
 
-            PLAYROOM_STATUS_CREATOR_OK->{ if (isCreator)"等待對手_Joinner" else "對方已完成出牌"}
-            PLAYROOM_STATUS_JOINER_OK->{ if (isCreator)"對方已完成出牌" else "等待對手_Creator"}
+            PLAYROOM_STATUS_CREATOR_OK->{ if (isCreator){ "等待對手"} else "對方已完成出牌"}
+            PLAYROOM_STATUS_JOINER_OK->{ if (isCreator)"對方已完成出牌" else { "等待對手" }}
             PLAYROOM_STATUS_TIE ->{
+                playRoom?.let {
+                    it.creatorCard = 99
+                    it.joinerCard = 99
+                    viewModel.updatePlayRoom(it)
+                }
+
                 restart()
                 "平手"
             }
