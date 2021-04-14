@@ -14,7 +14,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
-import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
 import com.example.paperscissorsstone.Constants.USER_NAME
 import com.example.paperscissorsstone.Constants.USER_UUID
@@ -103,9 +102,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                         .show()
                 }
             }
-        mRef.child(playRoom.id.toString())
-            .child("status")
-            .setValue(PLAYROOM_STATUS_WAIT)
     }
 
 
@@ -116,10 +112,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
             creator = getStringSharedPreferences(USER_NAME)!!,
             joiner = "",
             creatorID = getStringSharedPreferences(USER_UUID)!!,
-            creatorCard = R.drawable.ic_play_unkown,
-            joinerCard = R.drawable.ic_play_unkown,
+            creatorCard = 99,
+            joinerCard = 99,
             creatorPoint = 0,
-            joinerPoint = 0
+            joinerPoint = 0,
+                status = PLAYROOM_STATUS_WAIT
         )
     }
     private fun generatePlayRoomID(): Long{
@@ -148,12 +145,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 setPositiveButton("ok",null)
             }.show()
         }else{
-            if (playRoom.creatorID != getStringSharedPreferences(USER_UUID)){
-                mRef.child(playRoom.id.toString())
-                    .child("status")
-                    .setValue(PLAYROOM_STATUS_START)
-            }
-
             val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
             view?.findNavController()?.navigate(action)
         }

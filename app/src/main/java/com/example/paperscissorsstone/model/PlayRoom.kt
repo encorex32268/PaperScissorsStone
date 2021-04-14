@@ -2,6 +2,7 @@ package com.example.paperscissorsstone.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
 import com.example.paperscissorsstone.R
 
 /**
@@ -21,7 +22,8 @@ data class PlayRoom(
     var creatorCard : Int,
     var joinerCard : Int,
     var creatorPoint : Int,
-    var joinerPoint : Int
+    var joinerPoint : Int,
+    var status : Int
 
 ) : Parcelable {
 
@@ -36,11 +38,12 @@ data class PlayRoom(
         parcel.readInt(),
         parcel.readInt(),
         parcel.readInt(),
+        parcel.readInt(),
         parcel.readInt()
     ) {
     }
 
-    constructor():this("","",0,"", R.drawable.ic_play_unkown,R.drawable.ic_play_unkown,0,0)
+    constructor():this("","",0,"", R.drawable.ic_play_unkown,R.drawable.ic_play_unkown,0,0,PLAYROOM_STATUS_WAIT)
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(creator)
@@ -51,6 +54,7 @@ data class PlayRoom(
         parcel.writeInt(joinerCard)
         parcel.writeInt(creatorPoint)
         parcel.writeInt(joinerPoint)
+        parcel.writeInt(status)
     }
 
     override fun describeContents(): Int {

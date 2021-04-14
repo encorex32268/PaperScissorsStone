@@ -1,36 +1,40 @@
 package com.example.paperscissorsstone.fragment
 
+import android.opengl.Visibility
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.os.CountDownTimer
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
-import com.example.paperscissorsstone.*
 import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_OK
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_WIN
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINER_OK
-import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINER_WIN
-import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_SHOW
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINNER_WIN
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_TIE
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
 import com.example.paperscissorsstone.Constants.USER_NAME
 import com.example.paperscissorsstone.Constants.USER_UUID
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentPlayBinding
+import com.example.paperscissorsstone.getStringSharedPreferences
 import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.viewmodel.PlayFragmentViewModel
-import com.google.firebase.database.*
+import com.google.firebase.database.FirebaseDatabase
 
 //https://www.vecteezy.com/vector-art/691497-rock-paper-scissors-neon-icons
 
 class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
+    private var isCardEnabled: Boolean = false
     private val TAG = PlayFragment::class.java.simpleName
     private lateinit var binding : FragmentPlayBinding
     private lateinit var  viewModel : PlayFragmentViewModel
@@ -52,102 +56,184 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.apply {
-            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(
-                PlayFragmentViewModel::class.java)
-            actionBar = (activity as AppCompatActivity).supportActionBar!!
-            actionBar.setDisplayHomeAsUpEnabled(true)
-
             arguments?.let { it ->
-                playRoom = it.getParcelable("playRoom")
-                playRoom?.let{ it ->
-                    if (getStringSharedPreferences(USER_UUID).equals(it.creatorID)){
-                        joinerPlayNameTextView.text = "Wait for Joiner"
-                        isCreator = true
-                    }else{
-                        it.joiner = getStringSharedPreferences(USER_NAME)
-                        joinerPlayNameTextView.text = it.joiner
-                        viewModel.updatePlayRoom(it)
-                        isCreator = false
-                    }
-                    viewModel.getPlayRoomInfo(it.id.toString())
-                    viewModel.playRoom.observe(requireActivity(), Observer { vmPlayRoom->
-                        if (vmPlayRoom.creator.isBlank() && !isCreator){
+                init(it)
+                viewModel.getPlayRoomInfo().observe(requireActivity(), Observer { vmPlayRoom ->
+                        playRoom = vmPlayRoom
+                    if (vmPlayRoom.creator.isBlank() && !isCreator){
                             // if creator is leave
-                            playRoom = vmPlayRoom
                             view.findNavController().popBackStack()
                         }else{
                             hostPlayNameTextView.text = vmPlayRoom.creator
                             joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
                             hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
                             joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-                            hostPlayCardImageView.setImageResource(vmPlayRoom.creatorCard)
-                            joinerPlayCardImageView.setImageResource(vmPlayRoom.joinerCard)
-                        }
+                            playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
+                            if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
+                                hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
+                                joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
+                                playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
+                            }
 
-
+                         }
                     })
-                    viewModel.status.observe(requireActivity(), Observer { status ->
-                        when(status){
-                            PLAYROOM_STATUS_WAIT ->{
-                                playRoomStatus.text = if (isCreator){
-                                    "Wait For Joiner"
-                                }else{
-                                    "等待對方出牌"
-                                }
-                            }
-                            PLAYROOM_STATUS_START->{
-                                playRoomStatus.text = "請出牌"
-                            }
-                            PLAYROOM_STATUS_SHOW->{
-                                playRoomStatus.text = "開牌"
-                            }
-                            PLAYROOM_STATUS_CREATOR_WIN->{
-                                playRoomStatus.text = if (isCreator){
-                                    "贏"
-                                }else{
-                                    "輸"
-                                }
-                            }
-                            PLAYROOM_STATUS_JOINER_WIN->{
-                                playRoomStatus.text = if (isCreator){
-                                    "輸"
-                                }else{
-                                    "贏"
-                                }
-                            }
-                            PLAYROOM_STATUS_CREATOR_OK->{
-                                playRoomStatus.text = "參加者思考中"
-                            }
-                            PLAYROOM_STATUS_JOINER_OK->{
-                                playRoomStatus.text = "主持者思考中"
-                            }
 
-                        }
-
-                    })
                     okButton.setOnClickListener {view ->
                         //upload
+                        var playroom = viewModel.playRoom.value!!
                         if (isCreator){
-                            it.creatorCard = nowCard
+                            playroom.creatorCard = nowCard
+                            playroom.status = PLAYROOM_STATUS_CREATOR_OK
                         }else{
-                            it.joinerCard = nowCard
+                            playroom.joinerCard = nowCard
+                            playroom.status = PLAYROOM_STATUS_JOINER_OK
                         }
-                        viewModel.updatePlayRoom(it)
+                        viewModel.updatePlayRoom(playroom)
                     }
-                }
+
 
 
 
             }
 
-            playCardPapper.setOnClickListener(this@PlayFragment)
-            playCardScissors.setOnClickListener(this@PlayFragment)
-            playCardStone.setOnClickListener(this@PlayFragment)
 
 
         }
     }
 
+    private fun FragmentPlayBinding.init(it: Bundle) {
+        viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(
+                PlayFragmentViewModel::class.java)
+        actionBar = (activity as AppCompatActivity).supportActionBar!!
+        actionBar.setDisplayHomeAsUpEnabled(true)
+        playTime.visibility = View.INVISIBLE
+        playRoom = it.getParcelable("playRoom")
+        playRoom?.let { it ->
+            if (getStringSharedPreferences(USER_UUID).equals(it.creatorID)) {
+                it.status = PLAYROOM_STATUS_WAIT
+                isCreator = true
+            } else {
+                it.joiner = getStringSharedPreferences(USER_NAME)
+                it.status = PLAYROOM_STATUS_START
+                joinerPlayNameTextView.text = it.joiner
+                isCreator = false
+            }
+
+            hostPlayCardImageView.setImageResource(setCardImageByInt(it.creatorCard))
+            joinerPlayCardImageView.setImageResource(setCardImageByInt(it.joinerCard))
+
+            viewModel.updatePlayRoom(it)
+            viewModel.listenPlayRoom(it.id.toString())
+        }
+    }
+
+    private fun cardClickListener(isCardEnabled : Boolean) {
+        binding.apply {
+            if (isCardEnabled){
+                playCardPapper.setOnClickListener(this@PlayFragment)
+                playCardScissors.setOnClickListener(this@PlayFragment)
+                playCardStone.setOnClickListener(this@PlayFragment)
+            }else{
+                playCardPapper.setOnClickListener(null)
+                playCardScissors.setOnClickListener(null)
+                playCardStone.setOnClickListener(null)
+            }
+        }
+
+
+    }
+
+    private fun restart() {
+        binding.apply {
+
+            playTime.visibility = View.VISIBLE
+        object : CountDownTimer(5000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                playTime.text = "Next Play ${millisUntilFinished/1000}"
+            }
+            override fun onFinish() {
+                playTime.visibility = View.INVISIBLE
+                playRoomStatus.text = getRoomStatus(PLAYROOM_STATUS_START)
+                hostPlayCardImageView.setImageResource(setCardImageByInt(99))
+                joinerPlayCardImageView.setImageResource(setCardImageByInt(99))
+
+            }
+        }.start()
+        }
+
+
+    }
+
+
+    private fun compare(creatorCard : Int, joinnerCard : Int) : Int {
+        var result = 99
+        when (creatorCard) {
+            5 ->
+                result =  when(joinnerCard){
+                    2 -> PLAYROOM_STATUS_JOINNER_WIN
+                    0 -> PLAYROOM_STATUS_CREATOR_WIN
+                    else -> PLAYROOM_STATUS_TIE
+                }
+            2 ->
+                result =  when(joinnerCard){
+                    5 -> PLAYROOM_STATUS_CREATOR_WIN
+                    0 -> PLAYROOM_STATUS_JOINNER_WIN
+                    else -> PLAYROOM_STATUS_TIE
+                }
+            0 ->
+                result = when(joinnerCard){
+                    2 -> PLAYROOM_STATUS_CREATOR_WIN
+                    5 -> PLAYROOM_STATUS_JOINNER_WIN
+                    else -> PLAYROOM_STATUS_TIE
+                }
+        }
+        return result
+
+    }
+
+
+    private fun getRoomStatus(status: Int): String {
+        return  when(status){
+            PLAYROOM_STATUS_WAIT ->{ "Wait..."}
+            PLAYROOM_STATUS_START ->{
+                cardClickListener(true)
+                "請出牌"
+            }
+            PLAYROOM_STATUS_CREATOR_WIN ->{
+                if (isCreator) {
+                    playRoom?.let {
+                        it.creatorPoint++
+                        it.creatorCard = 99
+                        it.joinerCard = 99
+                        viewModel.updatePlayRoom(it)
+                    }
+                    restart()
+                    "WIN"
+                }
+                else "Loss"
+            }
+            PLAYROOM_STATUS_JOINNER_WIN ->{if (isCreator)"Loss"
+            else
+                playRoom?.let {
+                    it.joinerPoint++
+                    it.creatorCard = 99
+                    it.joinerCard = 99
+                    viewModel.updatePlayRoom(it)
+                }
+                restart()
+                "WIN"
+            }
+
+            PLAYROOM_STATUS_CREATOR_OK->{ if (isCreator)"等待對手_Joinner" else "對方已完成出牌"}
+            PLAYROOM_STATUS_JOINER_OK->{ if (isCreator)"對方已完成出牌" else "等待對手_Creator"}
+            PLAYROOM_STATUS_TIE ->{
+                restart()
+                "平手"
+            }
+            else->"Error"
+
+        }
+    }
 
 
     override fun onStart() {
@@ -184,17 +270,26 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
         val image = if (isCreator) binding.hostPlayCardImageView else binding.joinerPlayCardImageView
         when(p0?.id){
             R.id.playCardPapper->{
-                image.setImageResource(R.drawable.icon_play_scissors)
-                nowCard = R.drawable.icon_play_scissors
+                image.setImageResource(R.drawable.icon_play_papper)
+                nowCard = 5
             }
             R.id.playCardScissors->{
-                image.setImageResource(R.drawable.icon_play_papper)
-                nowCard = R.drawable.icon_play_papper
+                image.setImageResource(R.drawable.icon_play_scissors)
+                nowCard = 2
             }
             R.id.playCardStone->{
                 image.setImageResource(R.drawable.icon_play_stone)
-                nowCard = R.drawable.icon_play_stone
+                nowCard = 0
             }
+        }
+    }
+
+    private fun setCardImageByInt(cardType : Int ) : Int{
+        return when(cardType){
+            5-> R.drawable.icon_play_papper
+            2-> R.drawable.icon_play_scissors
+            0->R.drawable.icon_play_stone
+            else -> R.drawable.ic_play_unkown
         }
     }
 
