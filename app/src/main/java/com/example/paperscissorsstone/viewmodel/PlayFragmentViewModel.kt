@@ -13,8 +13,6 @@ import com.google.firebase.database.*
 class PlayFragmentViewModel(application: Application)  : AndroidViewModel(application){
 
     var playRoom = MutableLiveData<PlayRoom>()
-
-    var status = MutableLiveData<Int>()
     private var mRef : DatabaseReference = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
 
     fun getPlayRoomInfo() : LiveData<PlayRoom>{

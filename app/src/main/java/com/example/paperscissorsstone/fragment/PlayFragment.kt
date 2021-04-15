@@ -1,6 +1,5 @@
 package com.example.paperscissorsstone.fragment
 
-import android.opengl.Visibility
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -34,7 +33,6 @@ import com.google.firebase.database.FirebaseDatabase
 //https://www.vecteezy.com/vector-art/691497-rock-paper-scissors-neon-icons
 
 class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
-    private var isCardEnabled: Boolean = false
     private val TAG = PlayFragment::class.java.simpleName
     private lateinit var binding : FragmentPlayBinding
     private lateinit var  viewModel : PlayFragmentViewModel
@@ -58,33 +56,10 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
         binding.apply {
             arguments?.let { it ->
                 init(it)
-                viewModel.getPlayRoomInfo().observe(requireActivity(), Observer { vmPlayRoom ->
-                        playRoom = vmPlayRoom
-                    Log.d(TAG, "onViewCreated: ViewModel PlayRoom ${playRoom.toString()}")
-                    if (vmPlayRoom.creator.isBlank() && !isCreator){
-                            // if creator is leave
-                            view.findNavController().popBackStack()
-                        }else{
-                            hostPlayNameTextView.text = vmPlayRoom.creator
-                            joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
-                            hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
-                            joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-                            playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
-                            if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
-                                hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
-                                joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
-                                playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
-                            }
-
-                         }
-                    })
-
+                viewModel.getPlayRoomInfo().observe(requireActivity(), observerPlayRoom)
                     okButton.setOnClickListener {view ->
-
-                        //upload
                         playRoom?.let {
                             if (it.creatorCard==99 || it.joinerCard==99)return@setOnClickListener
-
                             cardClickListener(false)
                             if (isCreator){
                                 it.creatorCard = nowCard
@@ -107,6 +82,30 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
 
         }
     }
+
+    private var observerPlayRoom = Observer<PlayRoom> { vmPlayRoom ->
+        binding.apply {
+        playRoom = vmPlayRoom
+        if (vmPlayRoom.creator.isBlank() && !isCreator){
+            // if creator is leave
+            leavePlayRoom()
+        }else{
+            hostPlayNameTextView.text = vmPlayRoom.creator
+            joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
+            hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
+            joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
+            playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
+            if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
+                hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
+                joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
+                playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
+            }
+
+        }
+    }
+    }
+
+
 
     private fun FragmentPlayBinding.init(it: Bundle) {
         viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(
@@ -156,7 +155,7 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
             playTime.visibility = View.VISIBLE
         object : CountDownTimer(5000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                playTime.text = "Next Play ${millisUntilFinished/1000}"
+                playTime.text = "Next Play ： ${millisUntilFinished/1000}"
             }
             override fun onFinish() {
                 playTime.visibility = View.INVISIBLE
@@ -171,6 +170,10 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        leavePlayRoom()
+    }
 
     private fun compare(creatorCard : Int, joinnerCard : Int) : Int {
         var result = 99
@@ -244,34 +247,32 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     }
 
 
-    override fun onStart() {
-        super.onStart()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        removePlayRoom()
-    }
-
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             android.R.id.home->{
-                removePlayRoom()
-                view?.findNavController()?.popBackStack()
+                leavePlayRoom()
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun removePlayRoom() {
-        if (isCreator) {
-            mRefPlayRoom.child(playRoom?.id.toString()).removeValue()
-        }else{
-            if (!playRoom?.creator.isNullOrBlank()){
-                mRefPlayRoom.child(playRoom?.id.toString()).child("joiner").setValue("")
+
+    private fun leavePlayRoom(){
+        view?.findNavController()?.popBackStack()
+        playRoom?.let {
+            if(isCreator){
+                mRefPlayRoom.child(it.id.toString()).removeValue()
+            } else{
+                if (it.creatorID.isNotEmpty()){
+                    mRefPlayRoom.child(it.id.toString()).child("joiner").setValue("")
+                    mRefPlayRoom.child(it.id.toString()).child("status").setValue(PLAYROOM_STATUS_WAIT)
+                }else{
+                    viewModel.getPlayRoomInfo().removeObserver(observerPlayRoom)
+                }
+
             }
         }
+
     }
 
     override fun onClick(p0: View?) {
