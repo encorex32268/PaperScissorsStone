@@ -45,13 +45,14 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewInit(view)
+    }
+
+    private fun viewInit(view: View) {
         actionBar = (activity as AppCompatActivity).supportActionBar!!
         actionBar.setDisplayHomeAsUpEnabled(true)
         binding.apply {
-            arguments?.let {
-                val name = it.getString("username","unkown")
-                homeUserName.text = name
-            }
+            homeUserName.text = getStringSharedPreferences(USER_NAME)
             homeRecyclerView.apply {
                 setHasFixedSize(true)
                 layoutManager = LinearLayoutManager(requireContext())
@@ -59,23 +60,28 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
                 mAdapter.iHomeItemListener = this@HomeFragment
                 adapter = mAdapter
             }
-            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(
-                HomeFragmentViewModel::class.java)
-            viewModel.getAllPlayRooms().observe(requireActivity(), Observer<List<PlayRoom>> {playRooms ->
-                mAdapter.apply {
-                    this.playRooms = playRooms
-                    notifyDataSetChanged()
-                }
-        })
+            viewModel =
+                ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
+                    .create(
+                        HomeFragmentViewModel::class.java
+                    )
+            viewModel.getAllPlayRooms()
+                .observe(requireActivity(), Observer<List<PlayRoom>> { playRooms ->
+                    mAdapter.apply {
+                        this.playRooms = playRooms
+                        notifyDataSetChanged()
+                    }
+                })
 
             homeSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
                 android.widget.SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     return true
                 }
+
                 override fun onQueryTextChange(newText: String?): Boolean {
                     newText?.let {
-                     viewModel.queryPlayRooms(it)
+                        viewModel.queryPlayRooms(it)
                     }
                     return false
                 }
@@ -140,9 +146,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), IHomeItemListener {
         if(!playRoom.joiner.isNullOrEmpty()){
             val builder = AlertDialog.Builder(requireContext())
             builder.apply {
-                setTitle("Warring")
-                setMessage("Can't go to this room is full")
-                setPositiveButton("ok",null)
+                setTitle(getString(R.string.HomeFragment_Alert_Title))
+                setMessage(getString(R.string.HomeFragment_Alert_Message))
+                setPositiveButton(getString(R.string.HomeFragment_Alert_Ok),null)
             }.show()
         }else{
             val action = HomeFragmentDirections.actionHomeFragmentToPlayFragment(playRoom)
