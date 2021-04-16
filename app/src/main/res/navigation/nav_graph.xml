@@ -24,10 +24,6 @@
         android:name="com.example.paperscissorsstone.fragment.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
-        <argument
-            android:name="username"
-            android:defaultValue="Unkown"
-            app:argType="string" />
         <action
             android:id="@+id/action_homeFragment_to_playFragment"
             app:destination="@id/playFragment"

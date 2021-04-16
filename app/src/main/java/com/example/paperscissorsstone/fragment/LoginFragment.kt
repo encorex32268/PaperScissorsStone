@@ -46,7 +46,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                     addUserDataToFirebase(User(uuid, name,0,0))
                 }
                 val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
-                action.username = name
                 view.findNavController().navigate(action)
             }
         }
