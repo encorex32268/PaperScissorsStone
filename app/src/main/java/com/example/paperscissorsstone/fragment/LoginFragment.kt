@@ -43,9 +43,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 if (uuid.isNullOrEmpty()){
                     uuid = UUID.randomUUID().toString()
                     setStringSharedPreferences(Constants.USER_UUID,uuid)
-                    val user =
-                        User(uuid, name,0,0)
-                    addUserDataToFirebase(user)
+                    addUserDataToFirebase(User(uuid, name,0,0))
                 }
                 val action = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
                 action.username = name
@@ -54,12 +52,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         }
 
     }
-    private fun addUserDataToFirebase(user: User) {
-        FirebaseDatabase.getInstance().getReference("Users")
-            .child(user.uuid)
-            .setValue(user)
-
-    }
+    private fun addUserDataToFirebase(user: User) { getFirebaseDatabaseUsers().child(user.uuid).setValue(user) }
 
 
 }
