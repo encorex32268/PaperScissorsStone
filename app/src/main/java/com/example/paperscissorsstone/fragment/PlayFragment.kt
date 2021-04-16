@@ -14,10 +14,13 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
+import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_USERS
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_OK
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_WIN
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_CREATOR_WINGAME
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINER_OK
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINNER_WIN
+import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_JOINNER_WINGAME
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_START
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_TIE
 import com.example.paperscissorsstone.Constants.PLAYROOM_STATUS_WAIT
@@ -25,10 +28,15 @@ import com.example.paperscissorsstone.Constants.USER_NAME
 import com.example.paperscissorsstone.Constants.USER_UUID
 import com.example.paperscissorsstone.R
 import com.example.paperscissorsstone.databinding.FragmentPlayBinding
+import com.example.paperscissorsstone.getFirebaseDatabasePlayRoom
+import com.example.paperscissorsstone.getFirebaseDatabaseUsers
 import com.example.paperscissorsstone.getStringSharedPreferences
 import com.example.paperscissorsstone.model.PlayRoom
 import com.example.paperscissorsstone.viewmodel.PlayFragmentViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 //https://www.vecteezy.com/vector-art/691497-rock-paper-scissors-neon-icons
 
@@ -40,6 +48,7 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     private lateinit var actionBar: ActionBar
     private var playRoom: PlayRoom? = null
     private val mRefPlayRoom = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_PLAYROOMS)
+    private val mRefUsers = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_USERS)
     private var nowCard =0
 
     override fun onCreateView(
@@ -57,23 +66,25 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
             arguments?.let { it ->
                 init(it)
                 viewModel.getPlayRoomInfo().observe(requireActivity(), observerPlayRoom)
-                    okButton.setOnClickListener {view ->
-                        playRoom?.let {
-                            if (it.creatorCard==99 || it.joinerCard==99)return@setOnClickListener
-                            cardClickListener(false)
-                            if (isCreator){
-                                it.creatorCard = nowCard
-                                it.status = PLAYROOM_STATUS_CREATOR_OK
-                            }else{
-                                it.joinerCard = nowCard
-                                it.status = PLAYROOM_STATUS_JOINER_OK
-                            }
-                            viewModel.updatePlayRoom(it)
-                        }
+            }
+            okButton.setOnClickListener {view ->
 
+                playRoom?.let {
+//                    if (it.creatorCard==99 || it.joinerCard==99) {
+//                        Log.d(TAG, "onViewCreated: 99")
+//                        return@setOnClickListener
+//                    }
+                    cardClickListener(false)
+                    if (isCreator){
+                        it.creatorCard = nowCard
+                        it.status = PLAYROOM_STATUS_CREATOR_OK
+                    }else{
+                        it.joinerCard = nowCard
+                        it.status = PLAYROOM_STATUS_JOINER_OK
                     }
-
-
+                    viewModel.updatePlayRoom(it)
+                }
+                Log.d(TAG, "onViewCreated: Click ${playRoom.toString()}")
 
 
             }
@@ -90,17 +101,16 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
             // if creator is leave
             leavePlayRoom()
         }else{
-            hostPlayNameTextView.text = vmPlayRoom.creator
-            joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
-            hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
-            joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-            playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
-            if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
-                hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
-                joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
-                playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
-            }
-
+                hostPlayNameTextView.text = vmPlayRoom.creator
+                joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
+                hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
+                joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
+                playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
+                if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
+                    hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
+                    joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
+                    playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
+                }
         }
     }
     }
@@ -241,6 +251,8 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 restart()
                 "平手"
             }
+            PLAYROOM_STATUS_CREATOR_WINGAME->{if (isCreator){ "GameOver WIN"} else "GameOver Loss"}
+            PLAYROOM_STATUS_JOINNER_WINGAME->{if (isCreator){ "GameOverloss"} else "WIN"}
             else->"Error"
 
         }
@@ -264,8 +276,21 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 mRefPlayRoom.child(it.id.toString()).removeValue()
             } else{
                 if (it.creatorID.isNotEmpty()){
-                    mRefPlayRoom.child(it.id.toString()).child("joiner").setValue("")
-                    mRefPlayRoom.child(it.id.toString()).child("status").setValue(PLAYROOM_STATUS_WAIT)
+                    it.joiner = ""
+                    it.status = PLAYROOM_STATUS_WAIT
+                    it.joinerPoint = 0
+                    it.creatorPoint = 0
+                    getFirebaseDatabasePlayRoom().child(it.id.toString()).setValue(playRoom)
+//                    val uuid = getStringSharedPreferences(USER_UUID).toString()
+//                    var loss = 0
+//                    mRefUsers.child(uuid).child("loss").addListenerForSingleValueEvent(object : ValueEventListener{
+//                        override fun onCancelled(error: DatabaseError) {}
+//                        override fun onDataChange(snapshot: DataSnapshot) { loss = snapshot.value as Int }
+//                    })
+//                    loss++
+//                    mRefUsers.child(uuid).child("loss").setValue(loss)
+//                    mRefPlayRoom.child(it.toString()).setValue(it)
+
                 }else{
                     viewModel.getPlayRoomInfo().removeObserver(observerPlayRoom)
                 }

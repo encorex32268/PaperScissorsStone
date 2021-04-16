@@ -4,6 +4,7 @@ package com.example.paperscissorsstone
 object Constants{
 
     const val FIREBASEDATEBASE_PLAYROOMS = "PlayRooms"
+    const val FIREBASEDATEBASE_USERS = "Users"
 
 
     const val PLAYROOM_STATUS_WAIT =0
@@ -13,6 +14,12 @@ object Constants{
     const val PLAYROOM_STATUS_TIE =4
     const val PLAYROOM_STATUS_CREATOR_OK =5
     const val PLAYROOM_STATUS_JOINER_OK =6
+    const val PLAYROOM_STATUS_CREATOR_WINGAME =7
+    const val PLAYROOM_STATUS_JOINNER_WINGAME =8
+
+
+
+
 
 
     const val SHAREDPREFERENCE_DATANAME = "UserData"
