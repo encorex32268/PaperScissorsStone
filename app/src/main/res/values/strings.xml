@@ -5,4 +5,14 @@
     <string name="HomeFragment_Alert_Title">Warring</string>
     <string name="HomeFragment_Alert_Message">Can\'t go to this room is full</string>
     <string name="HomeFragment_Alert_Ok">ok</string>
+    <string name="wait">Wait...</string>
+    <string name="pleasePlay">請出牌</string>
+    <string name="win">WIN</string>
+    <string name="loss">Loss</string>
+    <string name="wait_for_matcher">等待對手</string>
+    <string name="matcher_done">對方已完成出牌</string>
+    <string name="game_tie">平手</string>
+    <string name="gameover_win">GameOver WIN</string>
+    <string name="gameover_loss">GameOver Loss</string>
+    <string name="error">Error</string>
 </resources>
