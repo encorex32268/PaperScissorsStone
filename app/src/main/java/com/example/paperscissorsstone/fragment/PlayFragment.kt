@@ -60,7 +60,6 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
         binding.apply {
             arguments?.let { it ->
                 init(it)
-                viewModel.getPlayRoomInfo().observe(requireActivity(), observerPlayRoom)
             }
             okButton.setOnClickListener {okButtonClick()}
         }
@@ -93,7 +92,6 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
 
 
     private fun FragmentPlayBinding.init(it: Bundle) {
-        viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(PlayFragmentViewModel::class.java)
         actionBar = (activity as AppCompatActivity).supportActionBar!!
         actionBar.setDisplayHomeAsUpEnabled(true)
         playTime.visibility = View.INVISIBLE
@@ -111,8 +109,10 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 joinerPlayNameTextView.text = it.joiner
                 isCreator = false
             }
+            viewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(PlayFragmentViewModel::class.java)
             viewModel.startGame(it)
-            viewModel.listenPlayRoom(it.id.toString())
+            viewModel.getPlayRoomInfo(it.id.toString()).observe(requireActivity(), observerPlayRoom)
+
         }
     }
 
@@ -225,28 +225,25 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
 
     private fun leavePlayRoom(){
         view?.findNavController()?.popBackStack()
-        playRoom?.let {
+        playRoom.let {
             if(isCreator){
-                mRefPlayRoom.child(it.id.toString()).removeValue()
+                viewModel.removeGame(it.id.toString())
             } else{
                 if (it.creatorID.isNotEmpty()){
-                    it.joiner = ""
-                    it.status = PLAYROOM_STATUS_WAIT
-                    it.joinerPoint = 0
-                    it.creatorPoint = 0
+                    viewModel.joinerLeaveRoom(it)
                     getFirebaseDatabasePlayRoom().child(it.id.toString()).setValue(playRoom)
-//                    val uuid = getStringSharedPreferences(USER_UUID).toString()
-//                    var loss = 0
-//                    mRefUsers.child(uuid).child("loss").addListenerForSingleValueEvent(object : ValueEventListener{
-//                        override fun onCancelled(error: DatabaseError) {}
-//                        override fun onDataChange(snapshot: DataSnapshot) { loss = snapshot.value as Int }
-//                    })
-//                    loss++
-//                    mRefUsers.child(uuid).child("loss").setValue(loss)
-//                    mRefPlayRoom.child(it.toString()).setValue(it)
+    //                    val uuid = getStringSharedPreferences(USER_UUID).toString()
+    //                    var loss = 0
+    //                    mRefUsers.child(uuid).child("loss").addListenerForSingleValueEvent(object : ValueEventListener{
+    //                        override fun onCancelled(error: DatabaseError) {}
+    //                        override fun onDataChange(snapshot: DataSnapshot) { loss = snapshot.value as Int }
+    //                    })
+    //                    loss++
+    //                    mRefUsers.child(uuid).child("loss").setValue(loss)
+    //                    mRefPlayRoom.child(it.toString()).setValue(it)
 
                 }else{
-                    viewModel.getPlayRoomInfo().removeObserver(observerPlayRoom)
+                    viewModel.getPlayRoomInfo(it.id.toString()).removeObserver(observerPlayRoom)
                 }
 
             }

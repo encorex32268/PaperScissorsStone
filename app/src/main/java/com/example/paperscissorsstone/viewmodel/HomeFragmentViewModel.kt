@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.paperscissorsstone.Constants.FIREBASEDATEBASE_PLAYROOMS
 import com.example.paperscissorsstone.model.PlayRoom
 import com.google.firebase.database.*
 
@@ -18,7 +19,7 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
     private lateinit var originPlayRooms : ArrayList<PlayRoom>
     init {
         firebaseDatabase = FirebaseDatabase.getInstance()
-        myRef = firebaseDatabase!!.getReference("PlayRooms")
+        myRef = firebaseDatabase!!.getReference(FIREBASEDATEBASE_PLAYROOMS)
         loadPlayRooms()
         originPlayRooms = arrayListOf()
     }
