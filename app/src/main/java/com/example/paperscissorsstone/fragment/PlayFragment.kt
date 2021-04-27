@@ -46,6 +46,7 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     private val mRefUsers = FirebaseDatabase.getInstance().getReference(FIREBASEDATEBASE_USERS)
     private var nowCard =0
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -79,12 +80,23 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 joinerPlayNameTextView.text = vmPlayRoom.joiner?:"Wait..."
                 hostPointsTextView.text = vmPlayRoom.creatorPoint.toString()
                 joinerPointsTextView.text = vmPlayRoom.joinerPoint.toString()
-                playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
-                if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
+                when {
+                playRoom.creatorPoint == 1 -> {
+                    playRoomStatus.text = getRoomStatus(PLAYROOM_STATUS_CREATOR_WINGAME)
+                }
+                playRoom.joinerPoint ==1 -> {
+                    playRoomStatus.text = getRoomStatus(PLAYROOM_STATUS_JOINNER_WINGAME)
+                }
+                else -> {
+                    playRoomStatus.text = getRoomStatus(vmPlayRoom.status)
+                }
+            }
+            if (vmPlayRoom.creatorCard!=99 && vmPlayRoom.joinerCard !=99){
                     hostPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.creatorCard))
                     joinerPlayCardImageView.setImageResource(setCardImageByInt(vmPlayRoom.joinerCard))
                     playRoomStatus.text = getRoomStatus(compare(vmPlayRoom.creatorCard,vmPlayRoom.joinerCard))
-                }
+            }
+
         }
     }
     }
@@ -133,7 +145,11 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
     }
 
     private fun restart() {
+
         binding.apply {
+            if (playRoom.creatorPoint == 1 || playRoom.joinerPoint == 1) {
+                return
+            }
             playTime.visibility = View.VISIBLE
         object : CountDownTimer(5000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -189,12 +205,12 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 getString(R.string.pleasePlay)
             }
             PLAYROOM_STATUS_CREATOR_WIN -> {
-                viewModel.addPoint(playRoom,isCreator)
+                viewModel.addPointCreator(playRoom)
                 restart()
                 if (isCreator) getString(R.string.win) else getString(R.string.loss)
             }
             PLAYROOM_STATUS_JOINNER_WIN ->{
-                viewModel.addPoint(playRoom,isCreator)
+                viewModel.addPointJoiner(playRoom)
                 restart()
                 if (isCreator){ getString(R.string.loss) } else getString(R.string.win) }
 
@@ -205,8 +221,21 @@ class PlayFragment : Fragment(R.layout.fragment_play), View.OnClickListener {
                 restart()
                 getString(R.string.game_tie)
             }
-            PLAYROOM_STATUS_CREATOR_WINGAME->{if (isCreator){ getString(R.string.gameover_win)} else getString(R.string.gameover_loss)}
-            PLAYROOM_STATUS_JOINNER_WINGAME->{if (isCreator){ getString(R.string.gameover_loss)} else getString(R.string.gameover_win)}
+            PLAYROOM_STATUS_CREATOR_WINGAME->{
+                viewModel.updateStatus(playRoom)
+                if (isCreator){
+                getString(R.string.gameover_win)
+
+            } else
+                getString(R.string.gameover_loss)
+            }
+            PLAYROOM_STATUS_JOINNER_WINGAME->{
+                viewModel.updateStatus(playRoom)
+                if (isCreator){
+                getString(R.string.gameover_loss)
+            }
+            else
+                getString(R.string.gameover_win)}
             else->getString(R.string.error)
 
         }

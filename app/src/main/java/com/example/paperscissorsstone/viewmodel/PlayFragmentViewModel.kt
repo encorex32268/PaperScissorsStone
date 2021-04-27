@@ -39,14 +39,27 @@ class PlayFragmentViewModel(application: Application)  : AndroidViewModel(applic
         mRef.child(playRoom.id.toString()).setValue(playRoom)
     }
 
-    override fun addPoint(playRoom: PlayRoom,isCreator : Boolean) {
+
+
+    override fun addPointCreator(playRoom: PlayRoom) {
         playRoom.apply {
-            if(isCreator){ creatorPoint++ }else{ joinerPoint ++ }
+            creatorPoint++
             creatorCard = 99
             joinerCard = 99
         }
         updatePlayRoom(playRoom)
     }
+
+    override fun addPointJoiner(playRoom: PlayRoom) {
+        playRoom.apply {
+            joinerPoint++
+            creatorCard = 99
+            joinerCard = 99
+        }
+        updatePlayRoom(playRoom)
+    }
+
+
     override fun resetCard(playRoom: PlayRoom){
         playRoom.apply {
             creatorCard = 99
@@ -82,7 +95,9 @@ class PlayFragmentViewModel(application: Application)  : AndroidViewModel(applic
         updatePlayRoom(playRoom)
     }
 
-
+    override fun updateStatus(playRoom: PlayRoom) {
+        updatePlayRoom(playRoom)
+    }
 
 
 }
